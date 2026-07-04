@@ -18,34 +18,16 @@ jobs:
       - name: 安装打包依赖
         run: |
           python3 -m pip install --upgrade pip
-          pip3 install py2app pandas openpyxl
+          pip3 install pyinstaller pandas openpyxl
 
-      - name: 生成 Mac 打包配置 setup.py
-        run: |
-          cat > setup.py << EOF
-          from setuptools import setup
-          APP = ["cycle_analysis.py"]
-          DATA_FILES = []
-          OPTIONS = {
-              'argv_emulation': True,
-              'packages': ["pandas", "openpyxl"],
-          }
-          setup(
-              app=APP,
-              data_files=DATA_FILES,
-              options={'py2app': OPTIONS},
-              setup_requires=['py2app'],
-          )
-          EOF
-
-      - name: 执行打包生成 .app
-        run: python3 setup.py py2app
+      - name: 打包为独立可执行文件
+        run: pyinstaller -F cycle_analysis.py
 
       - name: 压缩成品程序
-        run: zip -r Mac周期分析工具.zip dist/cycle_analysis.app
+        run: zip -r Mac工具.zip dist/cycle_analysis
 
-      - name: 上传打包产物（可下载）
+      - name: 上传打包产物
         uses: actions/upload-artifact@v4
         with:
           name: Mac工具压缩包
-          path: Mac周期分析工具.zip
+          path: Mac工具.zip
