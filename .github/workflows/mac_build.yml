@@ -1,0 +1,51 @@
+name: Build MacOS App
+on:
+  push:
+    branches: [ main, master ]
+
+jobs:
+  build-mac:
+    runs-on: macos-latest
+    steps:
+      - name: 拉取代码
+        uses: actions/checkout@v4
+
+      - name: 安装 Python3
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: 安装打包依赖
+        run: |
+          python3 -m pip install --upgrade pip
+          pip3 install py2app pandas openpyxl
+
+      - name: 生成 Mac 打包配置 setup.py
+        run: |
+          cat > setup.py << EOF
+          from setuptools import setup
+          APP = ["cycle_analysis.py"]
+          DATA_FILES = []
+          OPTIONS = {
+              'argv_emulation': True,
+              'packages': ["pandas", "openpyxl"],
+          }
+          setup(
+              app=APP,
+              data_files=DATA_FILES,
+              options={'py2app': OPTIONS},
+              setup_requires=['py2app'],
+          )
+          EOF
+
+      - name: 执行打包生成 .app
+        run: python3 setup.py py2app
+
+      - name: 压缩成品程序
+        run: zip -r Mac周期分析工具.zip dist/cycle_analysis.app
+
+      - name: 上传打包产物（可下载）
+        uses: actions/upload-artifact@v4
+        with:
+          name: Mac工具压缩包
+          path: Mac周期分析工具.zip
